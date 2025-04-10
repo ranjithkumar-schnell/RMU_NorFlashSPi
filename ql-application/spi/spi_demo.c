@@ -78,11 +78,8 @@ unsigned char spi_demo_wait_write_read = QL_SPI_DEMO_WAIT_NONE;
 static void ql_spi_demo_task_pthread(void *ctx)
 {
     QlOSStatus err = 0;
-    unsigned char outdata[5] = {0x9F};
-    unsigned char indata[5] = {0x00};
-    //unsigned char outlen = 5;
-    unsigned short inlen =4;
- 
+    Jdecid = 0x90;  
+    outdata = &Jdecid;
     ql_errcode_gpio ret;
     ql_spi_clk_e spiclk;
     ql_spi_transfer_mode_e transmode;
@@ -140,7 +137,7 @@ static void ql_spi_demo_task_pthread(void *ctx)
 
         // Write data using polling
        // ql_spi_write(QL_CUR_SPI_PORT, outdata, outlen);
-       ql_spi_write_read(QL_CUR_SPI_PORT, indata, outdata,inlen);
+       ql_spi_write_read(QL_CUR_SPI_PORT, indata, outdata,JDEC_ID_LEN);
 
         // Read data using polling
         //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);

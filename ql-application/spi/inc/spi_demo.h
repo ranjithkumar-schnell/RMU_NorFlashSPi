@@ -38,6 +38,13 @@ extern "C" {
 #define SPI_DEMO_TASK_PRIO           12
 #define SPI_DEMO_TASK_STACK_SIZE     8*1024
 #define SPI_DEMO_TASK_EVENT_CNT      4
+#define JDEC_ID_LEN                  4
+
+unsigned char *outdata;
+unsigned char indata[5];
+unsigned char Jdecid ;//0x90;    //unsigned char outlen = 5;
+//unsigned char ManuFacture_id = 0x9f;
+//unsigned short inlen =4;
 
 /*========================================================================
  *  function Definition
