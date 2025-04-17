@@ -75,12 +75,62 @@ unsigned char spi_demo_wait_write_read = QL_SPI_DEMO_WAIT_NONE;
 #define QL_TYPE_SHIFT_8             8
 
 
+unsigned char ResetSP[2] = {ENABLE_RESET_ID, RESET_ID};
+unsigned char ReadAddress[2]= {READ_4BYTE_ID, 0x56};
+
+
+
+void readJEDECregister(unsigned char *data, unsigned char len)
+{
+    ql_spi_cs_low(QL_CUR_SPI_PORT);
+
+    // Write data using polling
+   // ql_spi_write(QL_CUR_SPI_PORT, outdata, outlen);
+   memset(JdecData, 0, sizeof(JdecData));
+   ql_spi_write_read(QL_CUR_SPI_PORT, JdecData, data,len);
+   QL_SPI_DEMO_LOG("The indata[0] is:%d",JdecData[0]);
+    QL_SPI_DEMO_LOG("The indata[1] is:%d",JdecData[1]);
+    QL_SPI_DEMO_LOG("The indata[2] is:%d",JdecData[2]);
+    QL_SPI_DEMO_LOG("The indata[3] is:%d",JdecData[3]);
+
+
+    // Read data using polling
+    //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);
+
+    ql_spi_cs_high(QL_CUR_SPI_PORT);
+
+
+}
+
+void read4byteRegister(unsigned char *data, unsigned char len)
+{
+    ql_spi_cs_low(QL_CUR_SPI_PORT);
+
+    // Write data using polling
+   ql_spi_write(QL_CUR_SPI_PORT, data, 2);
+   memset(ReadData, 0, sizeof(ReadData));
+  ql_spi_read(QL_CUR_SPI_PORT, ReadData, len);
+//ql_spi_write_read(QL_CUR_SPI_PORT, ReadData, data, len);
+   QL_SPI_DEMO_LOG("The ReadData[0] is:%d",ReadData[0]);
+    QL_SPI_DEMO_LOG("The ReadData[1] is:%d",ReadData[1]);
+    QL_SPI_DEMO_LOG("The ReadData[2] is:%d",ReadData[2]);
+    QL_SPI_DEMO_LOG("The ReadData[3] is:%d",ReadData[3]);
+
+
+    // Read data using polling
+    //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);
+
+    ql_spi_cs_high(QL_CUR_SPI_PORT);
+
+
+}
+
 static void ql_spi_demo_task_pthread(void *ctx)
 {
     QlOSStatus err = 0;
-    Jdecid = 0x90;  
+    Jdecid = JDEC_ID; 
     outdata = &Jdecid;
-    ql_errcode_gpio ret;
+     ql_errcode_gpio ret;
     ql_spi_clk_e spiclk;
     ql_spi_transfer_mode_e transmode;
     unsigned int framesize;
@@ -131,19 +181,18 @@ static void ql_spi_demo_task_pthread(void *ctx)
     ql_spi_init_ext(spi_config);
 
      //ql_spi_flash_data_printf(outdata, outlen);
+     ql_spi_cs_low(QL_CUR_SPI_PORT);
+     ql_spi_write(QL_CUR_SPI_PORT, ResetSP, 2);
+     ql_spi_cs_high(QL_CUR_SPI_PORT);
+     ql_rtos_task_sleep_s(1);
+     
+   
+    while (1) 
+    {
 
-    while (1) {
-        ql_spi_cs_low(QL_CUR_SPI_PORT);
-
-        // Write data using polling
-       // ql_spi_write(QL_CUR_SPI_PORT, outdata, outlen);
-       ql_spi_write_read(QL_CUR_SPI_PORT, indata, outdata,JDEC_ID_LEN);
-
-        // Read data using polling
-        //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);
-
-        ql_spi_cs_high(QL_CUR_SPI_PORT);
-
+        readJEDECregister(outdata,JDEC_ID_RESPONSE_LEN);
+        ql_rtos_task_sleep_s(10);
+        read4byteRegister(ReadAddress,MANF_ID_RESPONSE_LEN);
         ql_rtos_task_sleep_s(10);
     }
 
