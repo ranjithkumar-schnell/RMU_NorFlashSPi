@@ -191,9 +191,9 @@ static void ql_spi_demo_task_pthread(void *ctx)
     {
 
         readJEDECregister(outdata,JDEC_ID_RESPONSE_LEN);
-        ql_rtos_task_sleep_s(10);
+        ql_rtos_task_sleep_s(3);
         read4byteRegister(ReadAddress,MANF_ID_RESPONSE_LEN);
-        ql_rtos_task_sleep_s(10);
+        ql_rtos_task_sleep_s(3);
     }
 
 QL_SPI_EXIT:

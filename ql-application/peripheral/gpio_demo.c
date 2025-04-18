@@ -185,7 +185,7 @@ static void ql_gpio_demo_thread(void *param)
             // ql_gpio_set_level(GPIO_3 ,LVL_LOW);
             QL_GPIODEMO_LOG("led 3 OFF");
             QL_GPIODEMO_LOG("Dig out result is :%d",Gpo_check);    
-           ql_rtos_task_sleep_ms(500);
+           ql_rtos_task_sleep_ms(5000);
               
         } 
 
@@ -234,10 +234,10 @@ static void ql_gpio_demo_thread(void *param)
         //     QL_GPIODEMO_LOG("SD card mount failed");
         // }
 
-        QL_GPIODEMO_LOG("no of sattelite count is :%d",satteliteCount);
-        ql_rtos_task_sleep_ms(2000);
-        sprintf(PayloadBuffer,"{\"VER\":\"1\",\"IMEI\":%s,\"GSM\":%d,\"GPS\":%d,\"ADC1\":%d,\"ADC2\":%d,\"ADC3\":%d,\"IOStatus\":%d,\"UARTStatus\":%d}",imei_num,csq,satteliteCount,adc_value1,adc_value2,adc_value3,gpioFunction,uartCheck);     
-        QL_GPIODEMO_LOG("PayloadBuffer is :%s",PayloadBuffer);
+        // QL_GPIODEMO_LOG("no of sattelite count is :%d",satteliteCount);
+        // ql_rtos_task_sleep_ms(2000);
+        // sprintf(PayloadBuffer,"{\"VER\":\"1\",\"IMEI\":%s,\"GSM\":%d,\"GPS\":%d,\"ADC1\":%d,\"ADC2\":%d,\"ADC3\":%d,\"IOStatus\":%d,\"UARTStatus\":%d}",imei_num,csq,satteliteCount,adc_value1,adc_value2,adc_value3,gpioFunction,uartCheck);     
+        // QL_GPIODEMO_LOG("PayloadBuffer is :%s",PayloadBuffer);
         ql_rtos_task_sleep_ms(100);
     }
 

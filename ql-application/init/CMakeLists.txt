@@ -24,7 +24,7 @@ if(NOT QL_PROJECT_MIXER)
 		add_appimg_file_ql_example(${target} ql_init.c)
 	endif()
 
-	target_link_libraries(${target} PRIVATE ql_app_nw ql_app_peripheral ql_app_osi ql_app_dev ql_app_sim ql_app_power ql_app_mqtt)
+	target_link_libraries(${target} PRIVATE ql_app_nw ql_app_peripheral ql_app_osi ql_app_dev ql_app_sim ql_app_power)
     # target_link_libraries(${target} PRIVATE ql_app_gnss)
 	target_link_libraries(${target} PRIVATE ql_app_spi)
 	# target_link_libraries(${target} PRIVATE ql_app_spi_nor_flash)
