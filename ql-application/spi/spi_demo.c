@@ -113,27 +113,32 @@ ql_errcode_spi_e eraseChip(void)
     return ret;
 }
 
-// void eraseBlock(unsigned char *data, unsigned char len)
-// {
-//     ql_spi_cs_low(QL_CUR_SPI_PORT);
-
-//     // Write data using polling
-//    // ql_spi_write(QL_CUR_SPI_PORT, outdata, outlen);
-//    memset(JdecData, 0, sizeof(JdecData));
-//    ql_spi_write(QL_CUR_SPI_PORT, JdecData, );
-//    QL_SPI_DEMO_LOG("The indata[0] is:%d",JdecData[0]);
-//     QL_SPI_DEMO_LOG("The indata[1] is:%d",JdecData[1]);
-//     QL_SPI_DEMO_LOG("The indata[2] is:%d",JdecData[2]);
-//     QL_SPI_DEMO_LOG("The indata[3] is:%d",JdecData[3]);
-
-
-//     // Read data using polling
-//     //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);
-
-//     ql_spi_cs_high(QL_CUR_SPI_PORT);
-
-
-// }
+//void eraseBlock(unsigned int DayIndex, unsigned int packetIndex)
+/**
+ * @brief Erases a 64KB block of flash memory starting at the specified day index.
+ *
+ * This function sends the necessary SPI commands to erase a 64KB block of flash memory.
+ * The starting address of the block is determined by the provided day index.
+ *
+ * @param DayIndex The index representing the starting day for the block to be erased.
+ *                 This index is used to calculate the starting address of the block.
+ * @return ql_errcode_spi_e Returns the result of the SPI write operation.
+ *                          QL_SPI_SUCCESS indicates success, while other values indicate failure.
+ */
+ql_errcode_spi_e eraseBlock(unsigned int DayIndex)
+{
+    ql_errcode_spi_e ret ;
+    unsigned char HighByte = (unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16)) ; // type cast the value to unisgne char
+    unsigned char MidByte  = (unsigned char)((DAY_START_ADDRESS(DayIndex) >> 8) & 0xFF);
+    unsigned char lowByte   = (unsigned char)((DAY_START_ADDRESS(DayIndex) & (0xFF)));
+    unsigned char EraseBlockid[] = {WRITE_ENABLE_ID,SPI_64KB_BLOCK_ERASE_ID,HighByte,MidByte,lowByte};
+    
+    ql_spi_cs_low(QL_CUR_SPI_PORT);
+    ret = ql_spi_write(QL_CUR_SPI_PORT, EraseBlockid,sizeof(EraseBlockid));
+    ql_spi_cs_high(QL_CUR_SPI_PORT);
+    ql_rtos_task_sleep_s(5);
+    return ret;
+}
 
 ql_errcode_spi_e ResetFlashSPI(void)
 {
@@ -166,24 +171,16 @@ unsigned char readJEDECregister(unsigned char *data, unsigned char len)
  }
 
 
-void readPage(unsigned char *data, unsigned char len)
+void readPage(unsigned char *address, unsigned char len)
 {
     ql_spi_cs_low(QL_CUR_SPI_PORT);
-
-    // Write data using polling
-   ql_spi_write(QL_CUR_SPI_PORT, data, len);
-   memset(ReadData, 0, sizeof(ReadData));
-  ql_spi_read(QL_CUR_SPI_PORT, ReadData, sizeof(ReadData));
-//ql_spi_write_read(QL_CUR_SPI_PORT, ReadData, data, len);
-   QL_SPI_DEMO_LOG("The ReadData[0] is:%d",ReadData[0]);
+    ql_spi_write(QL_CUR_SPI_PORT, address, len);
+    memset(ReadData, 0, sizeof(ReadData));
+    ql_spi_read(QL_CUR_SPI_PORT, ReadData, sizeof(ReadData));
+    QL_SPI_DEMO_LOG("The ReadData[0] is:%d",ReadData[0]);
     QL_SPI_DEMO_LOG("The ReadData[1] is:%d",ReadData[1]);
     QL_SPI_DEMO_LOG("The ReadData[2] is:%d",ReadData[2]);
     QL_SPI_DEMO_LOG("The ReadData[3] is:%d",ReadData[3]);
-
-
-    // Read data using polling
-    //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);
-
     ql_spi_cs_high(QL_CUR_SPI_PORT);
 
 
@@ -253,14 +250,21 @@ static void ql_spi_demo_task_pthread(void *ctx)
     }
 
     ResetFlashSPI();// use retursn in actual code
-    eraseChip();  // use return in actual code
-    
+    //eraseChip();  // use return in actual code
+    eraseBlock(1); // use return in actual code
      ql_rtos_task_sleep_s(1);
      
    
     while (1) 
     {
         ValidJDECReceived =  readJEDECregister(outdata,JDEC_ID_RESPONSE_LEN);
+        ql_rtos_task_sleep_s(3);
+        if (ValidJDECReceived == 0) {
+            QL_SPI_DEMO_LOG("SPI ic is connected, JDEC ID is 0xEF");
+            break;
+        } else {
+            QL_SPI_DEMO_LOG("please check the SPI ic connection, JDEC ID is not 0xEF");
+        }
         ql_rtos_task_sleep_s(3);
         readPage(ReadAddress,2);
         ql_rtos_task_sleep_s(3);
