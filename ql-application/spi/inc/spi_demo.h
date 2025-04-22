@@ -69,10 +69,10 @@ extern "C" {
 #define WRITE_DISABLE_ID            0x04
 #define PAGE_WRITE_ID               0x02
 
-
+// MACROS FOR READ WRITE AND ERASE REALTED
 #define PAGE_READ_SIZE              250 // may increase upto 255
 #define MANF_ID_RESPONSE_LEN         3
-#define JDEC_ID_RESPONSE_LEN         3
+#define JDEC_ID_RESPONSE_LEN         4
 #define RESET_ID_LEN                 2 
 
 unsigned char Jdecid ;

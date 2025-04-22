@@ -75,32 +75,96 @@ unsigned char spi_demo_wait_write_read = QL_SPI_DEMO_WAIT_NONE;
 #define QL_TYPE_SHIFT_8             8
 
 
-unsigned char ResetSP[2] = {ENABLE_RESET_ID, RESET_ID};
+
 unsigned char ReadAddress[2]= {READ_DATA_ID, 0x56};
 
 
+// void eraseSector(unsigned char *data, unsigned char len)
+// {
+//     ql_spi_cs_low(QL_CUR_SPI_PORT);
 
-void readJEDECregister(unsigned char *data, unsigned char len)
+//     // Write data using polling
+//    // ql_spi_write(QL_CUR_SPI_PORT, outdata, outlen);
+//    memset(JdecData, 0, sizeof(JdecData));
+//    ql_spi_write_read(QL_CUR_SPI_PORT, JdecData, data,len);
+//    QL_SPI_DEMO_LOG("The indata[0] is:%d",JdecData[0]);
+//     QL_SPI_DEMO_LOG("The indata[1] is:%d",JdecData[1]);
+//     QL_SPI_DEMO_LOG("The indata[2] is:%d",JdecData[2]);
+//     QL_SPI_DEMO_LOG("The indata[3] is:%d",JdecData[3]);
+
+
+//     // Read data using polling
+//     //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);
+
+//     ql_spi_cs_high(QL_CUR_SPI_PORT);
+
+
+// }
+
+ql_errcode_spi_e eraseChip(void)
 {
+    ql_errcode_spi_e ret ;
+    unsigned char Eraseid[2] = {WRITE_ENABLE_ID,SPI_CHIP_ERASE_ID};
+    
+    ql_spi_cs_low(QL_CUR_SPI_PORT);
+    ret = ql_spi_write(QL_CUR_SPI_PORT, Eraseid,sizeof(Eraseid));
+    ql_spi_cs_high(QL_CUR_SPI_PORT);
+    ql_rtos_task_sleep_s(5);
+    return ret;
+}
+
+// void eraseBlock(unsigned char *data, unsigned char len)
+// {
+//     ql_spi_cs_low(QL_CUR_SPI_PORT);
+
+//     // Write data using polling
+//    // ql_spi_write(QL_CUR_SPI_PORT, outdata, outlen);
+//    memset(JdecData, 0, sizeof(JdecData));
+//    ql_spi_write(QL_CUR_SPI_PORT, JdecData, );
+//    QL_SPI_DEMO_LOG("The indata[0] is:%d",JdecData[0]);
+//     QL_SPI_DEMO_LOG("The indata[1] is:%d",JdecData[1]);
+//     QL_SPI_DEMO_LOG("The indata[2] is:%d",JdecData[2]);
+//     QL_SPI_DEMO_LOG("The indata[3] is:%d",JdecData[3]);
+
+
+//     // Read data using polling
+//     //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);
+
+//     ql_spi_cs_high(QL_CUR_SPI_PORT);
+
+
+// }
+
+ql_errcode_spi_e ResetFlashSPI(void)
+{
+    ql_errcode_spi_e ret ;
+    unsigned char ResetSPI[2] = {ENABLE_RESET_ID, RESET_ID};
+    
+    ql_spi_cs_low(QL_CUR_SPI_PORT);
+    ret = ql_spi_write(QL_CUR_SPI_PORT, ResetSPI, sizeof(ResetSPI));
+    ql_spi_cs_high(QL_CUR_SPI_PORT);
+    ql_rtos_task_sleep_s(1);
+    return ret;
+}
+
+
+unsigned char readJEDECregister(unsigned char *data, unsigned char len)
+{
+    unsigned char ret = 1;
     ql_spi_cs_low(QL_CUR_SPI_PORT);
 
-    // Write data using polling
-   // ql_spi_write(QL_CUR_SPI_PORT, outdata, outlen);
-   memset(JdecData, 0, sizeof(JdecData));
-   ql_spi_write_read(QL_CUR_SPI_PORT, JdecData, data,len);
-   QL_SPI_DEMO_LOG("The indata[0] is:%d",JdecData[0]);
+    memset(JdecData, 0, sizeof(JdecData));
+    ql_spi_write_read(QL_CUR_SPI_PORT, JdecData, data,len);
+    QL_SPI_DEMO_LOG("The indata[0] is:%d",JdecData[0]);
     QL_SPI_DEMO_LOG("The indata[1] is:%d",JdecData[1]);
     QL_SPI_DEMO_LOG("The indata[2] is:%d",JdecData[2]);
     QL_SPI_DEMO_LOG("The indata[3] is:%d",JdecData[3]);
-
-
-    // Read data using polling
-    //ql_spi_read(QL_CUR_SPI_PORT, indata, inlen);
-
     ql_spi_cs_high(QL_CUR_SPI_PORT);
+    ret = JdecData[1] == 0xEF ? 0 : 1 ;
+    QL_SPI_DEMO_LOG("jedec valid data return is JdecData[%d]:%d",ret,JdecData[1]);
+    return ret;
+ }
 
-
-}
 
 void readPage(unsigned char *data, unsigned char len)
 {
@@ -130,10 +194,12 @@ static void ql_spi_demo_task_pthread(void *ctx)
     QlOSStatus err = 0;
     Jdecid = JDEC_ID; 
     outdata = &Jdecid;
-     ql_errcode_gpio ret;
+    ql_errcode_gpio ret;
+    ql_errcode_spi_e ret_spi;
     ql_spi_clk_e spiclk;
     ql_spi_transfer_mode_e transmode;
     unsigned int framesize;
+    unsigned char ValidJDECReceived = 1;
 
     if (QL_CUR_SPI_CS_PIN == QUEC_PIN_NONE || QL_CUR_SPI_DO_PIN == QUEC_PIN_NONE || QL_CUR_SPI_DI_PIN == QUEC_PIN_NONE) {
         QL_SPI_DEMO_LOG("pin err");
@@ -178,22 +244,25 @@ static void ql_spi_demo_task_pthread(void *ctx)
     spi_config.transmode = transmode;
     spi_config.cs = QL_SPI_CS0;
     spi_config.clk_delay = QL_SPI_CLK_DELAY_0;
-    ql_spi_init_ext(spi_config);
+     ret_spi = ql_spi_init_ext(spi_config);
 
-     //ql_spi_flash_data_printf(outdata, outlen);
-     ql_spi_cs_low(QL_CUR_SPI_PORT);
-     ql_spi_write(QL_CUR_SPI_PORT, ResetSP, 2);
-     ql_spi_cs_high(QL_CUR_SPI_PORT);
+
+    if(ret_spi == QL_SPI_SUCCESS) 
+    {
+        QL_SPI_DEMO_LOG("spi init Sucess");
+    }
+
+    ResetFlashSPI();// use retursn in actual code
+    eraseChip();  // use return in actual code
+    
      ql_rtos_task_sleep_s(1);
      
    
     while (1) 
     {
-
-        readJEDECregister(outdata,JDEC_ID_RESPONSE_LEN);
+        ValidJDECReceived =  readJEDECregister(outdata,JDEC_ID_RESPONSE_LEN);
         ql_rtos_task_sleep_s(3);
         readPage(ReadAddress,2);
-        //read4byteRegister(ReadAddress,MANF_ID_RESPONSE_LEN);
         ql_rtos_task_sleep_s(3);
     }
 
