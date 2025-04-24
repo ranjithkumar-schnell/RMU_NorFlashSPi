@@ -54,8 +54,8 @@ extern "C" {
 #define HIGH_BYTE(x)               ((x)>>16)  
 #define MID_BYTE(x)                ((((x)>>8))&(0x00FF))
 #define LOWBYTE(x)                 ((x)&(0x00FF))
-
-
+#define SINGLE_WRITE                0X01  // 1 byte write
+#define SINGLE_READ                 0X01  // 1 byte read
 //WINBOND FLASH 128Mbit 16 MB INSTRUCTION AS PER DATA SHEET
 
 //RESET ID'S /commands
