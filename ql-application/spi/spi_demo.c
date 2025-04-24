@@ -64,7 +64,7 @@ unsigned char spi_demo_wait_write_read = QL_SPI_DEMO_WAIT_NONE;
 
 
 
-unsigned char ReadAddress[4]= {READ_DATA_ID,0x10,0x00,0x00}; // 0x10000
+unsigned char ReadAddress[4]= {READ_DATA_ID,0x11,0x00,0x00}; 
 
 char rcv_buf[]  = " 050.00,018.00,086.00,2.0,10,050.00,050.00,20.00,230.00,45.00,550.68,50.00,650.00,035.00,546553.50,123.11,123456.00,12345678.00,456.12,55.89,789.32,911.00,85.69,14369.00,231129213,2025-02-04 13:12:35,25,278730,901943,18,1,10,160424,148 ";
 
@@ -113,10 +113,11 @@ ql_errcode_spi_e WriteEnableFlashSPI(void)
 ql_errcode_spi_e eraseBlock(unsigned char DayIndex)
 {
     ql_errcode_spi_e ret ;
-    unsigned char HighByte = 0x10;//(unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16)) ; // type cast the value to unisgned char
+   
+    unsigned char HighByte = (unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16) & 0xFF) ; // type cast the value to unisgned char
     unsigned char MidByte  = (unsigned char)((DAY_START_ADDRESS(DayIndex) >> 8) & 0xFF);
     unsigned char lowByte  = (unsigned char)((DAY_START_ADDRESS(DayIndex) & (0xFF)));
-    unsigned char EraseBlockid[] = {SPI_64KB_BLOCK_ERASE_ID,HighByte,MidByte,lowByte};
+    unsigned char EraseBlockid[4] = {SPI_64KB_BLOCK_ERASE_ID,HighByte,MidByte,lowByte};
     WriteEnableFlashSPI(); // enable write operation before starting erase procedure
     ql_spi_cs_low(QL_CUR_SPI_PORT);
     ret = ql_spi_write(QL_CUR_SPI_PORT, EraseBlockid,sizeof(EraseBlockid));
@@ -183,11 +184,11 @@ ql_errcode_spi_e WritePage(unsigned char DayIndex,char *data)
     ql_errcode_spi_e ret;
     unsigned char WritePage[250] = {0};
    
-    //unsigned char HighByteWr = (unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16)); // type cast the value to unsigned char
+    unsigned char HighByteWr = (unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16) & 0xFF); // type cast the value to unsigned char
     unsigned char MidByteWr = (unsigned char)((DAY_START_ADDRESS(DayIndex) >> 8) & 0xFF);
     unsigned char lowByteWr = (unsigned char)((DAY_START_ADDRESS(DayIndex) & (0xFF)));
     WritePage[0] = PAGE_WRITE_ID;
-    WritePage[1] =  0x10;//HighByteWr;
+    WritePage[1] = HighByteWr;
     WritePage[2] = MidByteWr;
     WritePage[3] = lowByteWr;
     memcpy(&WritePage[4], data,240);
@@ -337,7 +338,7 @@ static void ql_spi_demo_task_pthread(void *ctx)
       // WriteEnableFlashSPI(); // use return in actual code
        //eraseChip();  // use return in actual code, rpc controlled to reset and erase entire chip
        eraseBlock(1); // use return in actual code,keep it below 255 for  128 Mbit
-      // WritePage(1,rcv_buf);
+       WritePage(1,rcv_buf);
        ql_rtos_task_sleep_s(2);
      
    
