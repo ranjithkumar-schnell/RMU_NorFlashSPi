@@ -76,7 +76,7 @@ char rcv_buf[]  = " 050.00,018.00,086.00,2.0,10,050.00,050.00,20.00,230.00,45.00
    this function is used to enable writing to the flash memory by sending the WRITE_ENABLE_ID command.
    The function takes no parameters and returns a ql_errcode_spi_e type indicating the success or failure of the operation.
    This function should be called evry time during writing to the flash memory and Also During Erasing ok flash ic
-    
+  
    */
 ql_errcode_spi_e WriteEnableFlashSPI(void)
 {
@@ -113,11 +113,11 @@ ql_errcode_spi_e WriteEnableFlashSPI(void)
 ql_errcode_spi_e eraseBlock(unsigned char DayIndex)
 {
     ql_errcode_spi_e ret ;
-    unsigned char HighByte = (unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16)) ; // type cast the value to unisgne char
+    unsigned char HighByte = 0x10;//(unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16)) ; // type cast the value to unisgned char
     unsigned char MidByte  = (unsigned char)((DAY_START_ADDRESS(DayIndex) >> 8) & 0xFF);
     unsigned char lowByte  = (unsigned char)((DAY_START_ADDRESS(DayIndex) & (0xFF)));
     unsigned char EraseBlockid[] = {SPI_64KB_BLOCK_ERASE_ID,HighByte,MidByte,lowByte};
-    
+    WriteEnableFlashSPI(); // enable write operation before starting erase procedure
     ql_spi_cs_low(QL_CUR_SPI_PORT);
     ret = ql_spi_write(QL_CUR_SPI_PORT, EraseBlockid,sizeof(EraseBlockid));
     ql_spi_cs_high(QL_CUR_SPI_PORT);
@@ -179,6 +179,7 @@ ql_errcode_spi_e ResetFlashSPI(void)
 
 ql_errcode_spi_e WritePage(unsigned char DayIndex,char *data)
 {
+    WriteEnableFlashSPI();  // enable write operation before starting write procedure
     ql_errcode_spi_e ret;
     unsigned char WritePage[250] = {0};
    
@@ -333,9 +334,9 @@ static void ql_spi_demo_task_pthread(void *ctx)
     }
 
        ResetFlashSPI();// use retursn in actual code
-       WriteEnableFlashSPI(); // use return in actual code
-       eraseChip();  // use return in actual code, rpc controlled to reset and erase entire chip
-       //eraseBlock(1); // use return in actual code,keep it below 255 for  128 Mbit
+      // WriteEnableFlashSPI(); // use return in actual code
+       //eraseChip();  // use return in actual code, rpc controlled to reset and erase entire chip
+       eraseBlock(1); // use return in actual code,keep it below 255 for  128 Mbit
       // WritePage(1,rcv_buf);
        ql_rtos_task_sleep_s(2);
      
