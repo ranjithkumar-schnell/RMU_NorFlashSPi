@@ -44,13 +44,13 @@ extern "C" {
 #define SECTOR_SIZE                4096
 #define BLOCK_SIZE                 0x10000   //65536 OR 64kb
 #define DATA_LOG_START_BLOCK       0x100000   // 0 TO 0xFFFF is reserved for metadata
-#define PACKET_SIZE                256  
+#define PACKET_SIZE                255  
 #define PACKETS_PER_DAY            200
 #define MAX_DAYS                   180
 #define START_BLOCK                1    
 #define METADATA_ADDR              0x000000
 #define DAY_START_ADDRESS(x)       (((x)*(BLOCK_SIZE))+(DATA_LOG_START_BLOCK))  // DATA_LOG_START_BLOCK + (x * 65536) // DATA_LOG_START_BLOCK + (x * 64kb) wher x IS DAY NUMBER
-#define PACKET_ADDRESS(x,y)        ((((x)*DATA_LOG_START_BLOCK))+((y)*PACKET_SIZE)) // DATA_LOG_START_BLOCK + (x * 65536) + (y * 256) where x IS DAY NUMBER AND y IS PACKET NUMBER
+#define PACKET_ADDRESS(x,y)        ((((x)*(BLOCK_SIZE)))+((y)*(PACKET_SIZE))+(DATA_LOG_START_BLOCK)) // DATA_LOG_START_BLOCK + (x * 65536) + (y * 256) where x IS DAY NUMBER AND y IS PACKET NUMBER
 #define HIGH_BYTE(x)               ((x)>>16)  
 #define MID_BYTE(x)                ((((x)>>8))&(0x00FF))
 #define LOWBYTE(x)                 ((x)&(0x00FF))
@@ -109,5 +109,4 @@ QlOSStatus ql_spi_demo_init(void);
 #endif
 
 #endif /* SPI_DEMO_H */
-
 

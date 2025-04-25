@@ -1,3 +1,4 @@
+
 /*================================================================
   Copyright (c) 2020 Quectel Wireless Solution, Co., Ltd.  All Rights Reserved.
   Quectel Wireless Solution Proprietary and Confidential.
@@ -66,7 +67,7 @@ unsigned char spi_demo_wait_write_read = QL_SPI_DEMO_WAIT_NONE;
 
 unsigned char ReadAddress[4]= {READ_DATA_ID,0x11,0x00,0x00}; 
 
-char rcv_buf[]  = " 050.00,018.00,086.00,2.0,10,050.00,050.00,20.00,230.00,45.00,550.68,50.00,650.00,035.00,546553.50,123.11,123456.00,12345678.00,456.12,55.89,789.32,911.00,85.69,14369.00,231129213,2025-02-04 13:12:35,25,278730,901943,18,1,10,160424,148 ";
+char rcv_buf[]  = "050.00,018.00,086.00,2.0,10,050.00,050.00,20.00,230.00,45.00,550.68,50.00,650.00,035.00,546553.50,123.11,123456.00,12345678.00,456.12,55.89,789.32,911.00,85.69,14369.00,231129213,2025-02-04 13:12:35,25,278730,901943,18,1,10,160424,148";
 
 
 
@@ -178,15 +179,43 @@ ql_errcode_spi_e ResetFlashSPI(void)
 
 
 
-ql_errcode_spi_e WritePage(unsigned char DayIndex,char *data)
+// ql_errcode_spi_e WritePage(unsigned char DayIndex,char *data)
+// {
+//     WriteEnableFlashSPI();  // enable write operation before starting write procedure
+//     ql_errcode_spi_e ret;
+//     unsigned char WritePage[250] = {0};
+   
+//     unsigned char HighByteWr = (unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16) & 0xFF); // type cast the value to unsigned char
+//     unsigned char MidByteWr = (unsigned char)((DAY_START_ADDRESS(DayIndex) >> 8) & 0xFF);
+//     unsigned char lowByteWr = (unsigned char)((DAY_START_ADDRESS(DayIndex) & (0xFF)));
+//     WritePage[0] = PAGE_WRITE_ID;
+//     WritePage[1] = HighByteWr;
+//     WritePage[2] = MidByteWr;
+//     WritePage[3] = lowByteWr;
+//     memcpy(&WritePage[4], data,240);
+//     QL_SPI_DEMO_LOG("write page data is :%s", WritePage);
+//     for (int i = 0; i < sizeof(WritePage); i++)
+//     {
+//         QL_SPI_DEMO_LOG("write page data is :%d", WritePage[i]);
+//     }
+ 
+//     ql_spi_cs_low(QL_CUR_SPI_PORT);
+//     ret = ql_spi_write(QL_CUR_SPI_PORT, WritePage, sizeof(WritePage));
+//     ql_spi_cs_high(QL_CUR_SPI_PORT);
+//     ql_rtos_task_sleep_s(5);
+//     return ret;
+// }
+
+
+ql_errcode_spi_e WritePage(unsigned char DayIndex,unsigned char packetIndex,char *data)
 {
     WriteEnableFlashSPI();  // enable write operation before starting write procedure
     ql_errcode_spi_e ret;
     unsigned char WritePage[250] = {0};
    
-    unsigned char HighByteWr = (unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16) & 0xFF); // type cast the value to unsigned char
-    unsigned char MidByteWr = (unsigned char)((DAY_START_ADDRESS(DayIndex) >> 8) & 0xFF);
-    unsigned char lowByteWr = (unsigned char)((DAY_START_ADDRESS(DayIndex) & (0xFF)));
+    unsigned char HighByteWr =(unsigned char)((PACKET_ADDRESS(DayIndex,packetIndex)>> 16) & 0xFF);//(unsigned char)(((DAY_START_ADDRESS(DayIndex)) >> 16) & 0xFF); // type cast the value to unsigned char
+    unsigned char MidByteWr = (unsigned char)((PACKET_ADDRESS(DayIndex,packetIndex)>> 8) & 0xFF);//(unsigned char)((DAY_START_ADDRESS(DayIndex) >> 8) & 0xFF);
+    unsigned char lowByteWr = (unsigned char)(PACKET_ADDRESS(DayIndex,packetIndex) & 0xFF);//(unsigned char)((DAY_START_ADDRESS(DayIndex)>> 8) & 0xFF);
     WritePage[0] = PAGE_WRITE_ID;
     WritePage[1] = HighByteWr;
     WritePage[2] = MidByteWr;
@@ -338,7 +367,7 @@ static void ql_spi_demo_task_pthread(void *ctx)
       // WriteEnableFlashSPI(); // use return in actual code
        //eraseChip();  // use return in actual code, rpc controlled to reset and erase entire chip
        eraseBlock(1); // use return in actual code,keep it below 255 for  128 Mbit
-       WritePage(1,rcv_buf);
+       WritePage(1,2,rcv_buf);
        ql_rtos_task_sleep_s(2);
      
    
