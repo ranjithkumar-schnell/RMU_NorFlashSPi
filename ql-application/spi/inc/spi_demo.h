@@ -50,7 +50,7 @@ extern "C" {
 #define START_BLOCK                1    
 #define METADATA_ADDR              0x000000
 #define DAY_START_ADDRESS(x)       (((x)*(BLOCK_SIZE))+(DATA_LOG_START_BLOCK))  // DATA_LOG_START_BLOCK + (x * 65536) // DATA_LOG_START_BLOCK + (x * 64kb) wher x IS DAY NUMBER
-#define PACKET_ADDRESS(x,y)        ((((x)*(BLOCK_SIZE)))+((y)*(PACKET_SIZE))+(DATA_LOG_START_BLOCK)) // DATA_LOG_START_BLOCK + (x * 65536) + (y * 256) where x IS DAY NUMBER AND y IS PACKET NUMBER
+#define PACKET_ADDRESS(x,y)        ((((x)*(BLOCK_SIZE))+((y)*(PAGE_SIZE)))+(DATA_LOG_START_BLOCK)) // DATA_LOG_START_BLOCK + (x * 65536) + (y * 256) where x IS DAY NUMBER AND y IS PACKET NUMBER
 #define HIGH_BYTE(x)               ((x)>>16)  
 #define MID_BYTE(x)                ((((x)>>8))&(0x00FF))
 #define LOWBYTE(x)                 ((x)&(0x00FF))
@@ -90,12 +90,9 @@ extern "C" {
 
 unsigned char Jdecid ;
 unsigned char *outdata;
-unsigned char ReadAddress[4];
-unsigned char ReadData[PAGE_READ_SIZE];
+unsigned char ReadData[250] ;
 unsigned char JdecData[5];
-//0x90;    //unsigned char outlen = 5;
-//unsigned char ManuFacture_id = 0x9f;
-//unsigned short inlen =4;
+
 
 /*========================================================================
  *  function Definition
